@@ -1,0 +1,11 @@
+{
+    "name": "rayan/backend",
+    "autoload": {
+        "psr-4": {
+            "Rayan\\Backend\\": "src/"
+        }
+    },
+    "require": {
+        "vlucas/phpdotenv": "^5.6"
+    }
+}
