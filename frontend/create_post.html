@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créer un Post</title>
+</head>
+<body>
+    <h1>Créer un Nouveau Post</h1>
+    <form id="createPostForm">
+        <label for="title">Titre :</label><br>
+        <input type="text" id="title" name="title" required><br><br>
+
+        <label for="description">Description :</label><br>
+        <textarea id="description" name="description" required></textarea><br><br>
+
+        <button type="submit">Publier</button>
+    </form>
+
+    <p id="response"></p>
+
+    <script>
+        document.getElementById("createPostForm").addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+
+            const response = await fetch('http://localhost/service_etudiant/backend/announcements/create_post.php', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.text();
+            document.getElementById("response").textContent = result;
+        });
+    </script>
+</body>
+</html>

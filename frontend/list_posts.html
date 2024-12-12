@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des Posts et Réponses</title>
+</head>
+<body>
+    <h1>Liste des Posts</h1>
+    <div id="postsContainer"></div>
+
+    <script>
+        // Fonction pour récupérer les posts depuis le backend
+        async function fetchPosts() {
+            try {
+                const response = await fetch('http://localhost/service_etudiant/backend/announcements/list_posts.php');
+
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP : ${response.status}`);
+                }
+
+                const posts = await response.json();
+                console.log('Données reçues :', posts);
+
+                const container = document.getElementById('postsContainer');
+
+                if (posts.length === 0) {
+                    container.innerHTML = "<p>Aucun post disponible.</p>";
+                    return;
+                }
+
+                posts.forEach(post => {
+                    console.log('Post en cours de traitement :', post);
+
+                    const postDiv = document.createElement('div');
+                    postDiv.innerHTML = `
+                        <h2>${post.title}</h2>
+                        <p>${post.description}</p>
+                        <p><strong>Posté par :</strong> ${post.username}</p>
+                        <p><strong>Date :</strong> ${post.created_at}</p>
+
+                        <h3>Réponses :</h3>
+                        <ul id="responses-${post.id}"></ul>
+
+                        <h4>Ajouter une réponse</h4>
+                        <form class="responseForm" data-post-id="${post.id}">
+                            <textarea name="response_text" placeholder="Écrivez votre réponse ici..." required></textarea><br>
+                            <button type="submit">Publier la réponse</button>
+                        </form>
+                        <p class="response-message" id="response-message-${post.id}"></p>
+
+                        <hr>
+                    `;
+                    container.appendChild(postDiv);
+
+                    // Charger les réponses pour le post
+                    fetchResponses(post.id);
+                });
+
+                // Ajouter des écouteurs d'événements pour chaque formulaire de réponse
+                document.querySelectorAll('.responseForm').forEach(form => {
+                    form.addEventListener('submit', async function(event) {
+                        event.preventDefault();
+                        const postId = this.getAttribute('data-post-id');
+                        const formData = new FormData(this);
+                        formData.append('post_id', postId);
+
+                        try {
+                            const response = await fetch('http://localhost/service_etudiant/backend/announcements/create_response.php', {
+                                method: 'POST',
+                                body: formData
+                            });
+
+                            const result = await response.text();
+                            document.getElementById(`response-message-${postId}`).textContent = result;
+
+                            // Recharger les réponses après ajout
+                            fetchResponses(postId);
+                            this.reset(); // Réinitialiser le formulaire après l'envoi
+                        } catch (error) {
+                            console.error('Erreur lors de l’ajout de la réponse :', error);
+                            document.getElementById(`response-message-${postId}`).textContent = "Erreur lors de l'ajout de la réponse.";
+                        }
+                    });
+                });
+
+            } catch (error) {
+                console.error("Erreur lors de la récupération des posts :", error);
+                document.getElementById('postsContainer').innerText = "Erreur lors du chargement des posts.";
+            }
+        }
+
+        // Fonction pour récupérer les réponses associées à un post
+        async function fetchResponses(postId) {
+            try {
+                const response = await fetch(`http://localhost/service_etudiant/backend/announcements/list_responses.php?post_id=${postId}`);
+
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP : ${response.status}`);
+                }
+
+                const responses = await response.json();
+                console.log(`Réponses pour le post ${postId} :`, responses);
+
+                const responseList = document.getElementById(`responses-${postId}`);
+                responseList.innerHTML = ''; // Nettoyer les réponses existantes
+
+                if (responses.length === 0) {
+                    responseList.innerHTML = "<li>Aucune réponse pour ce post.</li>";
+                    return;
+                }
+
+                responses.forEach(response => {
+                    const responseItem = document.createElement('li');
+                    responseItem.textContent = `${response.response_text} (par ${response.username} le ${response.created_at})`;
+                    responseList.appendChild(responseItem);
+                });
+            } catch (error) {
+                console.error(`Erreur lors de la récupération des réponses pour le post ${postId} :`, error);
+                const responseList = document.getElementById(`responses-${postId}`);
+                responseList.innerHTML = "<li>Erreur lors du chargement des réponses.</li>";
+            }
+        }
+
+        // Charger les posts au chargement de la page
+        fetchPosts();
+    </script>
+</body>
+</html>

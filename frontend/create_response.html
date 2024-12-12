@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Répondre à un Post</title>
+</head>
+<body>
+    <h1>Répondre à un Post</h1>
+    <form id="createResponseForm">
+        <label for="post_id">ID du Post :</label><br>
+        <input type="number" id="post_id" name="post_id" required><br><br>
+
+        <label for="response_text">Votre Réponse :</label><br>
+        <textarea id="response_text" name="response_text" required></textarea><br><br>
+
+        <button type="submit">Répondre</button>
+    </form>
+
+    <p id="response"></p>
+
+    <script>
+        document.getElementById("createResponseForm").addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+
+            const response = await fetch('http://localhost/service_etudiant/backend/responses/create_response.php', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.text();
+            document.getElementById("response").textContent = result;
+        });
+    </script>
+</body>
+</html>
