@@ -1,5 +1,6 @@
 <?php
-require_once '../common/Database.php';
+require_once __DIR__ . '/../common/Database.php';
+
 
 class User {
     private $db;

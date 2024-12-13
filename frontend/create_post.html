@@ -25,7 +25,7 @@
 
             const formData = new FormData(event.target);
 
-            const response = await fetch('http://localhost/service_etudiant/backend/announcements/create_post.php', {
+            const response = await fetch('http://localhost/service_etudiant/backend/gateway.php/api/announcements/create_post.php', {
                 method: 'POST',
                 body: formData
             });

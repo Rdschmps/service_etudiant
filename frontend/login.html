@@ -27,7 +27,7 @@
 
             const formData = new FormData(event.target);
 
-            const response = await fetch('http://localhost/service_etudiant/backend/authentification/login.php', {
+            const response = await fetch('http://localhost/service_etudiant/backend/gateway.php/api/auth/login.php', {
                 method: 'POST',
                 body: formData
             });

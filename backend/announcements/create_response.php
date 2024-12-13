@@ -1,6 +1,6 @@
 <?php
-session_start();
-require_once '../common/Database.php';
+//session_start();
+require_once __DIR__ . '/../common/Database.php';
 
 class Response {
     private $db;
