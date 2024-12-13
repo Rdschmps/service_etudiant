@@ -34,7 +34,7 @@
             const formData = new FormData(event.target);
 
             // Envoyer les données au backend
-            const response = await fetch('http://localhost/test_s_et/backend/add_user.php', {
+            const response = await fetch('http://localhost/service_etudiant/backend/authentification/add_user.php', {
                 method: 'POST',
                 body: formData
             });

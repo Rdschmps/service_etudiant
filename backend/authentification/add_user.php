@@ -1,5 +1,5 @@
 <?php
-require_once 'common/Database.php';
+require_once '../common/Database.php';
 
 class User {
     private $db;
