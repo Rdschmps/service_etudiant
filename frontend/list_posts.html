@@ -4,60 +4,94 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Liste des Posts et Réponses</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>Liste des Posts</h1>
-    <div id="postsContainer"></div>
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
+
+    <!-- Navbar -->
+    <nav class="p-4 shadow-md bg-gradient-to-r from-indigo-400 to-indigo-600">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="#" class="text-white text-2xl font-bold">Service Étudiant</a>
+            <div>
+                <a href="./login.html" class="text-white px-4 py-2 rounded-md hover:bg-indigo-500 transition">Connexion</a>
+                <a href="./add_user.html" class="text-white px-4 py-2 rounded-md hover:bg-indigo-500 transition">Inscription</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <header class="text-center py-8 bg-gradient-to-r from-indigo-100 via-indigo-50 to-indigo-100 shadow-md">
+        <h1 class="text-4xl font-extrabold text-indigo-600">Liste des Posts</h1>
+        <p class="mt-2 text-gray-600">Découvrez les discussions des étudiants et contribuez avec vos réponses.</p>
+        <a href="./create_post.html" class="mt-4 inline-block bg-indigo-500 text-white px-6 py-2 rounded-lg shadow-lg hover:bg-indigo-600 transition hover:ring hover:ring-indigo-300"> Créer un post</a>
+    </header>
+
+    <!-- Contenu principal -->
+    <main class="container mx-auto my-8 p-4 flex-grow">
+        <div id="postsContainer" class="space-y-8">
+            <!-- Les posts seront générés ici -->
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gradient-to-r from-indigo-400 to-indigo-600 text-white text-center py-4">
+        <p>&copy; 2024 Service Étudiant. Tous droits réservés.</p>
+    </footer>
 
     <script>
-        // Fonction pour récupérer les posts depuis le backend via l'API Gateway
         async function fetchPosts() {
             try {
                 const response = await fetch('http://localhost/service_etudiant/backend/gateway.php/api/announcements/list_posts.php');
-
-                if (!response.ok) {
-                    throw new Error(`Erreur HTTP : ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`Erreur HTTP : ${response.status}`);
 
                 const posts = await response.json();
-                console.log('Données reçues :', posts);
-
                 const container = document.getElementById('postsContainer');
 
                 if (posts.length === 0) {
-                    container.innerHTML = "<p>Aucun post disponible.</p>";
+                    container.innerHTML = "<p class='text-center text-gray-500'>Aucun post disponible.</p>";
                     return;
                 }
 
                 posts.forEach(post => {
-                    console.log('Post en cours de traitement :', post);
-
                     const postDiv = document.createElement('div');
+                    postDiv.className = "bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition";
                     postDiv.innerHTML = `
-                        <h2>${post.title}</h2>
-                        <p>${post.description}</p>
-                        <p><strong>Posté par :</strong> ${post.username}</p>
-                        <p><strong>Date :</strong> ${post.created_at}</p>
+                        <h2 class="text-2xl font-semibold text-indigo-600 mb-2">${post.title}</h2>
+                        <p class="text-gray-700">${post.description}</p>
+                        <div class="mt-4 text-sm text-gray-500">
+                            <p><strong>Posté par :</strong> ${post.username}</p>
+                            <p><strong>Date :</strong> ${new Date(post.created_at).toLocaleDateString()}</p>
+                        </div>
 
-                        <h3>Réponses :</h3>
-                        <ul id="responses-${post.id}"></ul>
+                        <details class="mt-6">
+                            <summary class="text-indigo-500 cursor-pointer hover:text-indigo-600">
+                                Voir les réponses
+                            </summary>
+                            <ul id="responses-${post.id}" class="list-disc list-inside mt-4 text-gray-700"></ul>
+                        </details>
 
-                        <h4>Ajouter une réponse</h4>
-                        <form class="responseForm" data-post-id="${post.id}">
-                            <textarea name="response_text" placeholder="Écrivez votre réponse ici..." required></textarea><br>
-                            <button type="submit">Publier la réponse</button>
-                        </form>
-                        <p class="response-message" id="response-message-${post.id}"></p>
-
-                        <hr>
+                        <div class="mt-6">
+                            <h4 class="text-lg font-medium">Ajouter une réponse</h4>
+                            <form class="responseForm mt-4" data-post-id="${post.id}">
+                                <textarea 
+                                    name="response_text" 
+                                    placeholder="Écrivez votre réponse ici..." 
+                                    class="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" 
+                                    required
+                                ></textarea>
+                                <button 
+                                    type="submit" 
+                                    class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-indigo-500 transition"
+                                >Publier la réponse</button>
+                            </form>
+                            <p class="response-message text-sm text-red-500 mt-2" id="response-message-${post.id}"></p>
+                        </div>
                     `;
                     container.appendChild(postDiv);
 
-                    // Charger les réponses pour le post
                     fetchResponses(post.id);
                 });
 
-                // Ajouter des écouteurs d'événements pour chaque formulaire de réponse
                 document.querySelectorAll('.responseForm').forEach(form => {
                     form.addEventListener('submit', async function(event) {
                         event.preventDefault();
@@ -74,56 +108,44 @@
                             const result = await response.text();
                             document.getElementById(`response-message-${postId}`).textContent = result;
 
-                            // Recharger les réponses après ajout
                             fetchResponses(postId);
-                            this.reset(); // Réinitialiser le formulaire après l'envoi
+                            this.reset();
                         } catch (error) {
-                            console.error('Erreur lors de l’ajout de la réponse :', error);
                             document.getElementById(`response-message-${postId}`).textContent = "Erreur lors de l'ajout de la réponse.";
                         }
                     });
                 });
-
             } catch (error) {
-                console.error("Erreur lors de la récupération des posts :", error);
-                document.getElementById('postsContainer').innerText = "Erreur lors du chargement des posts.";
+                document.getElementById('postsContainer').innerHTML = "<p class='text-center text-red-500'>Erreur lors du chargement des posts.</p>";
             }
         }
 
-        // Fonction pour récupérer les réponses associées à un post via l'API Gateway
         async function fetchResponses(postId) {
             try {
                 const response = await fetch(`http://localhost/service_etudiant/backend/gateway.php/api/announcements/list_responses.php?post_id=${postId}`);
-
-
-                if (!response.ok) {
-                    throw new Error(`Erreur HTTP : ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`Erreur HTTP : ${response.status}`);
 
                 const responses = await response.json();
-                console.log(`Réponses pour le post ${postId} :`, responses);
-
                 const responseList = document.getElementById(`responses-${postId}`);
-                responseList.innerHTML = ''; // Nettoyer les réponses existantes
+                responseList.innerHTML = '';
 
                 if (responses.length === 0) {
-                    responseList.innerHTML = "<li>Aucune réponse pour ce post.</li>";
+                    responseList.innerHTML = "<li class='text-gray-500'>Aucune réponse pour ce post.</li>";
                     return;
                 }
 
                 responses.forEach(response => {
                     const responseItem = document.createElement('li');
-                    responseItem.textContent = `${response.response_text} (par ${response.username} le ${response.created_at})`;
+                    responseItem.className = "mt-1";
+                    responseItem.textContent = `${response.response_text} (par ${response.username}, le ${new Date(response.created_at).toLocaleDateString()})`;
                     responseList.appendChild(responseItem);
                 });
             } catch (error) {
-                console.error(`Erreur lors de la récupération des réponses pour le post ${postId} :`, error);
                 const responseList = document.getElementById(`responses-${postId}`);
-                responseList.innerHTML = "<li>Erreur lors du chargement des réponses.</li>";
+                responseList.innerHTML = "<li class='text-red-500'>Erreur lors du chargement des réponses.</li>";
             }
         }
 
-        // Charger les posts au chargement de la page
         fetchPosts();
     </script>
 </body>

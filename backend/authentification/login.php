@@ -25,7 +25,7 @@ class Login {
                 // Sécuriser la session en régénérant l'ID
                 session_regenerate_id(true);
 
-                echo "Connexion réussie ! Bienvenue, " . htmlspecialchars($user['username']) . ".";
+                echo "Connexion réussie ! Bienvenue, " . htmlspecialchars($user['username']) . ", vous allez être redirigés.";
             } else {
                 echo "Email ou mot de passe incorrect.";
             }

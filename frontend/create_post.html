@@ -4,35 +4,69 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Créer un Post</title>
+    <!-- TailwindCSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>Créer un Nouveau Post</h1>
-    <form id="createPostForm">
-        <label for="title">Titre :</label><br>
-        <input type="text" id="title" name="title" required><br><br>
+<body class="bg-gray-50 min-h-screen flex flex-col">
 
-        <label for="description">Description :</label><br>
-        <textarea id="description" name="description" required></textarea><br><br>
+    <!-- Navbar avec dégradé indigo -->
+    <nav class="p-4 shadow-md bg-gradient-to-r from-indigo-400 to-indigo-600">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="#" class="text-white text-2xl font-bold">Service Étudiant</a>
+            <div>
+                <a href="./login.html" class="text-white px-4 py-2 rounded-md hover:bg-indigo-500 transition">Connexion</a>
+                <a href="./add_user" class="text-white px-4 py-2 rounded-md hover:bg-indigo-500 transition">Inscription</a>
+            </div>
+        </div>
+    </nav>
 
-        <button type="submit">Publier</button>
-    </form>
+    <!-- Contenu principal -->
+    <div class="flex-grow flex items-center justify-center">
+        <div class="max-w-lg p-8 bg-white rounded-xl shadow-lg">
+            <h2 class="text-2xl font-semibold text-center mb-6 text-indigo-600">Créer un Nouveau Post</h2>
+            <form id="createPostForm" class="space-y-6">
+                <div>
+                    <label for="title" class="block text-sm font-medium text-gray-700">Titre :</label>
+                    <input type="text" id="title" name="title" class="w-full p-3 mt-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none" placeholder="Entrez le titre" required>
+                </div>
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700">Description :</label>
+                    <textarea id="description" name="description" class="w-full p-3 mt-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none" placeholder="Entrez la description" required></textarea>
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-indigo-500 to-indigo-700 text-white py-3 rounded-lg font-medium hover:from-indigo-600 hover:to-indigo-800 transition">
+                    Publier
+                </button>
+            </form>
+            <p id="response" class="mt-4 text-center text-sm text-red-500"></p>
+        </div>
+    </div>
 
-    <p id="response"></p>
-
-    <script>
-        document.getElementById("createPostForm").addEventListener("submit", async function (event) {
-            event.preventDefault();
-
-            const formData = new FormData(event.target);
-
-            const response = await fetch('http://localhost/service_etudiant/backend/gateway.php/api/announcements/create_post.php', {
-                method: 'POST',
-                body: formData
-            });
-
-            const result = await response.text();
-            document.getElementById("response").textContent = result;
-        });
-    </script>
+    <!-- Footer toujours en bas -->
+    <footer class="bg-gradient-to-r from-indigo-400 to-indigo-600 text-white text-center py-4">
+        <p>&copy; 2024 Service Étudiant. Tous droits réservés.</p>
+    </footer>
 </body>
+<script>
+    document.getElementById("createPostForm").addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const formData = new FormData(event.target);
+
+        const response = await fetch('http://localhost/service_etudiant/backend/gateway.php/api/announcements/create_post.php', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.text();
+        const responseElement = document.getElementById("response");
+
+        if (result.includes("Post créé avec succès")) {
+            responseElement.textContent = result;
+            responseElement.className = "mt-4 text-center text-sm text-green-500";
+        } else {
+            responseElement.textContent = result;
+            responseElement.className = "mt-4 text-center text-sm text-red-500";
+        }
+    });
+</script>
 </html>
