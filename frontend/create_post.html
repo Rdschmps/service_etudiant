@@ -45,28 +45,38 @@
     <footer class="bg-gradient-to-r from-indigo-400 to-indigo-600 text-white text-center py-4">
         <p>&copy; 2024 Service Étudiant. Tous droits réservés.</p>
     </footer>
-</body>
-<script>
-    document.getElementById("createPostForm").addEventListener("submit", async function (event) {
-        event.preventDefault();
 
-        const formData = new FormData(event.target);
+    <script>
+        document.getElementById("createPostForm").addEventListener("submit", async function (event) {
+            event.preventDefault();
 
-        const response = await fetch('http://localhost/service_etudiant/backend/gateway.php/api/announcements/create_post.php', {
-            method: 'POST',
-            body: formData
+            const formData = new FormData(event.target);
+            const token = localStorage.getItem('token'); // Récupérer le token JWT depuis localStorage
+
+            try {
+                const response = await fetch('http://localhost/service_etudiant/backend/gateway.php/api/announcements/create_post.php', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                const result = await response.text();
+                const responseElement = document.getElementById("response");
+
+                if (result.includes("Post créé avec succès")) {
+                    responseElement.textContent = result;
+                    responseElement.className = "mt-4 text-center text-sm text-green-500";
+                } else {
+                    responseElement.textContent = result;
+                    responseElement.className = "mt-4 text-center text-sm text-red-500";
+                }
+            } catch (error) {
+                console.error('Erreur lors de la création du post :', error);
+                document.getElementById("response").textContent = "Erreur lors de la création du post.";
+            }
         });
-
-        const result = await response.text();
-        const responseElement = document.getElementById("response");
-
-        if (result.includes("Post créé avec succès")) {
-            responseElement.textContent = result;
-            responseElement.className = "mt-4 text-center text-sm text-green-500";
-        } else {
-            responseElement.textContent = result;
-            responseElement.className = "mt-4 text-center text-sm text-red-500";
-        }
-    });
-</script>
+    </script>
+</body>
 </html>

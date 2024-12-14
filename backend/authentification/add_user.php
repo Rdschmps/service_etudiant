@@ -24,7 +24,7 @@ class User {
                 ':password_hash' => $passwordHash
             ]);
 
-            echo "Utilisateur créé avec succès !";
+            echo "Utilisateur créé avec succès, Veuillez vous connecter !";
         } catch (PDOException $e) {
             echo "Erreur lors de la création de l'utilisateur : " . $e->getMessage();
         }

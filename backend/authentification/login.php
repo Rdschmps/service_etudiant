@@ -1,9 +1,12 @@
 <?php
-//session_start();
-require_once './common/Database.php';
+require_once __DIR__ . '/../common/Database.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
+
+use \Firebase\JWT\JWT;
 
 class Login {
     private $db;
+    private $secretKey = 'QWxhZGRpbjpvcGVuIHNlc2FtZQ=='; // Remplace par une clé secrète sécurisée
 
     public function __construct() {
         $this->db = Database::getInstance();
@@ -17,20 +20,27 @@ class Login {
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($user && password_verify($password, $user['password_hash'])) {
-                // Création de la session
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['username'] = $user['username'];
-                $_SESSION['email'] = $user['email'];
+                // Générer le token JWT
+                $payload = [
+                    'user_id' => $user['id'],
+                    'username' => $user['username'],
+                    'email' => $user['email'],
+                    'iat' => time(),
+                    'exp' => time() + 3600 // Expiration dans 1 heure
+                ];
 
-                // Sécuriser la session en régénérant l'ID
-                session_regenerate_id(true);
+                $token = JWT::encode($payload, $this->secretKey, 'HS256');
 
-                echo "Connexion réussie ! Bienvenue, " . htmlspecialchars($user['username']) . ", vous allez être redirigés.";
+                // Retourner le token au frontend
+                header('Content-Type: application/json');
+                echo json_encode(['message' => 'Connexion réussie, vous allez être redirigé', 'token' => $token]);
             } else {
-                echo "Email ou mot de passe incorrect.";
+                header('Content-Type: application/json');
+                echo json_encode(['error' => 'Email ou mot de passe incorrect.']);
             }
         } catch (PDOException $e) {
-            echo "Erreur lors de la connexion : " . $e->getMessage();
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Erreur lors de la connexion : ' . $e->getMessage()]);
         }
     }
 }
@@ -44,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $login = new Login();
         $login->authenticate($email, $password);
     } else {
-        echo "Veuillez remplir tous les champs.";
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'Veuillez remplir tous les champs.']);
     }
 }
-?>

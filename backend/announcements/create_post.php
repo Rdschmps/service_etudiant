@@ -1,15 +1,13 @@
 <?php
-//session_start();
-
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 require_once __DIR__ . '/../common/Database.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
 
+use \Firebase\JWT\JWT;
+use \Firebase\JWT\Key;
 
 class Post {
     private $db;
+    private $secretKey = 'QWxhZGRpbjpvcGVuIHNlc2FtZQ=='; // Remplace par une clé secrète sécurisée
 
     public function __construct() {
         $this->db = Database::getInstance();
@@ -45,23 +43,35 @@ class Post {
     }
 }
 
-// Vérifier si l'utilisateur est connecté
-if (!isset($_SESSION['user_id'])) {
-    echo "Vous devez être connecté pour créer un post.";
-    exit();
-}
+// Vérification du token JWT
+$headers = getallheaders();
+$authHeader = $headers['Authorization'] ?? null;
 
-// Traitement du formulaire
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $title = $_POST['title'] ?? null;
-    $description = $_POST['description'] ?? null;
-    $userId = $_SESSION['user_id'];
+if ($authHeader && preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+    $token = $matches[1];
+    $secretKey = 'QWxhZGRpbjpvcGVuIHNlc2FtZQ=='; // Utilise la même clé secrète que pour la génération du token
 
-    if ($title && $description) {
-        $post = new Post();
-        $post->create($userId, $title, $description);
-    } else {
-        echo "Veuillez remplir tous les champs.";
+    try {
+        $decoded = JWT::decode($token, new Key($secretKey, 'HS256'));
+        $userId = $decoded->user_id;
+
+        // Traitement du formulaire
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $title = $_POST['title'] ?? null;
+            $description = $_POST['description'] ?? null;
+
+            if ($title && $description) {
+                $post = new Post();
+                $post->create($userId, $title, $description);
+            } else {
+                echo "Veuillez remplir tous les champs.";
+            }
+        }
+    } catch (Exception $e) {
+        http_response_code(401);
+        echo "Accès non autorisé : " . $e->getMessage();
     }
+} else {
+    http_response_code(401);
+    echo "Token manquant ou invalide.";
 }
-?>

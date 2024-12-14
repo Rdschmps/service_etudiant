@@ -23,7 +23,7 @@
     <header class="text-center py-8 bg-gradient-to-r from-indigo-100 via-indigo-50 to-indigo-100 shadow-md">
         <h1 class="text-4xl font-extrabold text-indigo-600">Liste des Posts</h1>
         <p class="mt-2 text-gray-600">Découvrez les discussions des étudiants et contribuez avec vos réponses.</p>
-        <a href="./create_post.html" class="mt-4 inline-block bg-indigo-500 text-white px-6 py-2 rounded-lg shadow-lg hover:bg-indigo-600 transition hover:ring hover:ring-indigo-300"> Créer un post</a>
+        <a href="./create_post.html" class="mt-4 inline-block bg-indigo-500 text-white px-6 py-2 rounded-lg shadow-lg hover:bg-indigo-600 transition hover:ring hover:ring-indigo-300">Créer un post</a>
     </header>
 
     <!-- Contenu principal -->
@@ -40,9 +40,23 @@
 
     <script>
         async function fetchPosts() {
+            const token = localStorage.getItem('token'); // Récupérer le token JWT depuis localStorage
+
             try {
-                const response = await fetch('http://localhost/service_etudiant/backend/gateway.php/api/announcements/list_posts.php');
-                if (!response.ok) throw new Error(`Erreur HTTP : ${response.status}`);
+                const response = await fetch('http://localhost/service_etudiant/backend/gateway.php/api/announcements/list_posts.php', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error("Accès non autorisé. Veuillez vous reconnecter.");
+                    } else {
+                        throw new Error(`Erreur HTTP : ${response.status}`);
+                    }
+                }
 
                 const posts = await response.json();
                 const container = document.getElementById('postsContainer');
@@ -102,6 +116,9 @@
                         try {
                             const response = await fetch('http://localhost/service_etudiant/backend/gateway.php/api/announcements/create_response.php', {
                                 method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`
+                                },
                                 body: formData
                             });
 
@@ -116,13 +133,19 @@
                     });
                 });
             } catch (error) {
-                document.getElementById('postsContainer').innerHTML = "<p class='text-center text-red-500'>Erreur lors du chargement des posts.</p>";
+                document.getElementById('postsContainer').innerHTML = `<p class='text-center text-red-500'>${error.message}</p>`;
             }
         }
 
         async function fetchResponses(postId) {
             try {
-                const response = await fetch(`http://localhost/service_etudiant/backend/gateway.php/api/announcements/list_responses.php?post_id=${postId}`);
+                const token = localStorage.getItem('token');
+                const response = await fetch(`http://localhost/service_etudiant/backend/gateway.php/api/announcements/list_responses.php?post_id=${postId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
                 if (!response.ok) throw new Error(`Erreur HTTP : ${response.status}`);
 
                 const responses = await response.json();

@@ -45,31 +45,41 @@
     <footer class="bg-gradient-to-r from-indigo-400 to-indigo-600 text-white text-center py-4">
         <p>&copy; 2024 Service Étudiant. Tous droits réservés.</p>
     </footer>
-</body>
-<script>
+
+    <script>
         document.getElementById("loginForm").addEventListener("submit", async function (event) {
             event.preventDefault();
 
             const formData = new FormData(event.target);
 
-            const response = await fetch('http://localhost/service_etudiant/backend/gateway.php/api/auth/login.php', {
-                method: 'POST',
-                body: formData
-            });
+            try {
+                const response = await fetch('http://localhost/service_etudiant/backend/gateway.php/api/auth/login.php', {
+                    method: 'POST',
+                    body: formData
+                });
 
-            const result = await response.text();
-            const responseElement = document.getElementById("response");
+                const result = await response.json();
+                const responseElement = document.getElementById("response");
 
-            if (result.includes("Connexion réussie")) {
-                responseElement.textContent = result;
-                responseElement.className = "mt-4 text-center text-sm text-green-500";
-                setTimeout(() => {
-                    window.location.href = "list_posts.html"; // redirection après connexion réussie
-                }, 2000);
-            } else {
-                responseElement.textContent = result;
-                responseElement.className = "mt-4 text-center text-sm text-red-500";
+                if (result.token) {
+                    responseElement.textContent = "Connexion réussie !";
+                    responseElement.className = "mt-4 text-center text-sm text-green-500";
+                    
+                    // Stocker le token dans localStorage
+                    localStorage.setItem('token', result.token);
+
+                    setTimeout(() => {
+                        window.location.href = "list_posts.html"; // Redirection après connexion réussie
+                    }, 2000);
+                } else {
+                    responseElement.textContent = result.error || "Erreur de connexion.";
+                    responseElement.className = "mt-4 text-center text-sm text-red-500";
+                }
+            } catch (error) {
+                console.error('Erreur lors de la connexion :', error);
+                document.getElementById("response").textContent = "Erreur lors de la connexion.";
             }
         });
     </script>
+</body>
 </html>
