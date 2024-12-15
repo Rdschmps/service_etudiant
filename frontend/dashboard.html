@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de Bord</title>
+    <!-- TailwindCSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="p-4 shadow-md bg-gradient-to-r from-indigo-400 to-indigo-600">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="#" class="text-white text-2xl font-bold">Service Étudiant</a>
+            <div>
+                <a href="./logout.html" class="text-white px-4 py-2 rounded-md hover:bg-indigo-500 transition">Se déconnecter</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenu principal -->
+    <div class="flex-grow container mx-auto mt-12 p-8 bg-white shadow-lg rounded-lg">
+        <h1 class="text-3xl font-semibold text-indigo-600 mb-4" id="welcomeMessage">Bienvenue !</h1>
+        <p class="text-gray-700 mb-2"><strong>Email :</strong> <span id="email"></span></p>
+        <p class="text-gray-700 mb-4"><strong>Nombre de points :</strong> <span id="points" class="font-bold text-indigo-500"></span></p>
+
+        <!-- Actions supplémentaires -->
+        <div class="mt-8">
+            <a href="./create_post.html" class="bg-indigo-500 text-white px-4 py-2 rounded-md hover:bg-indigo-600 transition">Créer un Post</a>
+            <a href="./list_posts.html" class="ml-4 bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition">Voir les Posts</a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gradient-to-r from-indigo-400 to-indigo-600 text-white text-center py-4 mt-12">
+        <p>&copy; 2024 Service Étudiant. Tous droits réservés.</p>
+    </footer>
+
+    
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const token = localStorage.getItem('token');
+
+        if (!token) {
+            window.location.href = './login.html';
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost/service_etudiant/backend/authentification/dashboard.php', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Erreur lors de la récupération des données utilisateur.');
+            }
+
+            const userData = await response.json();
+
+            if (userData.error) {
+                throw new Error(userData.error);
+            }
+
+            document.getElementById('welcomeMessage').textContent = `Bienvenue, ${userData.username} !`;
+            document.getElementById('email').textContent = userData.email;
+            document.getElementById('points').textContent = userData.points;
+
+        } catch (error) {
+            console.error(error);
+            alert('Erreur de connexion. Veuillez vous reconnecter.');
+            localStorage.removeItem('token'); // Supprimer le token invalide
+            window.location.href = './login.html';
+        }
+        
+    });
+    
+</script>
+
+
+</body>
+</html>

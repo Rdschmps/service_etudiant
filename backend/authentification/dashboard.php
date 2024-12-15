@@ -1,38 +1,49 @@
 <?php
 session_start();
-require_once '../common/Database.php'; // Assure-toi que le chemin est correct
+require_once '../common/Database.php';
+require_once '../../vendor/autoload.php';
 
-// Vérifier si l'utilisateur est connecté
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../../frontend/login.html");
-    exit();
-}
+use \Firebase\JWT\JWT;
+use \Firebase\JWT\Key;
 
-try {
-    // Connexion à la base de données
-    $db = Database::getInstance();
+// Vérifier le token JWT
+$headers = getallheaders();
+$authHeader = $headers['Authorization'] ?? null;
 
-    // Récupérer le nombre de points de l'utilisateur
-    $stmt = $db->prepare("SELECT points FROM users WHERE id = :user_id");
-    $stmt->execute([':user_id' => $_SESSION['user_id']]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+if ($authHeader && preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+    $token = $matches[1];
+    $secretKey = 'QWxhZGRpbjpvcGVuIHNlc2FtZQ=='; // Utilise une clé secrète sécurisée
 
-    $points = $user['points'] ?? 0; // Par défaut, 0 points si non trouvé
-} catch (PDOException $e) {
-    $points = 'Erreur lors de la récupération des points';
+    try {
+        $decoded = JWT::decode($token, new Key($secretKey, 'HS256'));
+        $userId = $decoded->user_id;
+
+        // Connexion à la base de données
+        $db = Database::getInstance();
+
+        // Récupérer les informations de l'utilisateur
+        $stmt = $db->prepare("SELECT username, email, points FROM users WHERE id = :user_id");
+        $stmt->execute([':user_id' => $userId]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($user) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'username' => $user['username'],
+                'email' => $user['email'],
+                'points' => $user['points']
+            ]);
+        } else {
+            http_response_code(404);
+            echo json_encode(['error' => 'Utilisateur non trouvé.']);
+        }
+
+    } catch (Exception $e) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Accès non autorisé : ' . $e->getMessage()]);
+    }
+} else {
+    http_response_code(401);
+    echo json_encode(['error' => 'Token manquant ou invalide.']);
 }
 ?>
-
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Tableau de Bord</title>
-</head>
-<body>
-    <h1>Bienvenue, <?php echo htmlspecialchars($_SESSION['username']); ?> !</h1>
-    <p>Email : <?php echo htmlspecialchars($_SESSION['email']); ?></p>
-    <p>Nombre de points : <strong><?php echo htmlspecialchars($points); ?></strong></p>
-    <a href="./logout.php">Se déconnecter</a>
-</body>
-</html>

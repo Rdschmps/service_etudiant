@@ -13,7 +13,7 @@ class Post {
         $this->db = Database::getInstance();
     }
 
-    public function create($userId, $title, $description) {
+    public function create($userId, $title, $description, $category) {
         try {
             // Vérifier si l'utilisateur a au moins 1 point
             $stmt = $this->db->prepare("SELECT points FROM users WHERE id = :user_id");
@@ -21,12 +21,13 @@ class Post {
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($user && $user['points'] >= 1) {
-                // Insérer le post
-                $stmt = $this->db->prepare("INSERT INTO posts (user_id, title, description) VALUES (:user_id, :title, :description)");
+                // Insérer le post avec la catégorie
+                $stmt = $this->db->prepare("INSERT INTO posts (user_id, title, description, category) VALUES (:user_id, :title, :description, :category)");
                 $stmt->execute([
                     ':user_id' => $userId,
                     ':title' => $title,
-                    ':description' => $description
+                    ':description' => $description,
+                    ':category' => $category
                 ]);
 
                 // Déduire 1 point à l'utilisateur
@@ -59,10 +60,11 @@ if ($authHeader && preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $title = $_POST['title'] ?? null;
             $description = $_POST['description'] ?? null;
+            $category = $_POST['category'] ?? null;
 
-            if ($title && $description) {
+            if ($title && $description && $category) {
                 $post = new Post();
-                $post->create($userId, $title, $description);
+                $post->create($userId, $title, $description, $category);
             } else {
                 echo "Veuillez remplir tous les champs.";
             }
@@ -75,3 +77,4 @@ if ($authHeader && preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
     http_response_code(401);
     echo "Token manquant ou invalide.";
 }
+?>
