@@ -83,11 +83,9 @@ cd service-etudiant
 
 3. **Créer la Base de Données** avec le fichier SQL fourni :
 
-   - Importer le fichier **`database.sql`** via **phpMyAdmin** ou la ligne de commande :
+   - Importer le fichier **`service_etudiant.sql`** via **phpMyAdmin** ou la ligne de commande :
 
-     ```bash
-     mysql -u root -p < database.sql
-     ```
+    le fichier est situé dans le dossier **`structure_BDD`**
 
 4. **Créer un Utilisateur MySQL** (si nécessaire) :
 
